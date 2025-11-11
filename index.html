@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groq AI Assistant</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="chat-container">
+    <h1 class="title">Groq AI Assistant</h1>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Ask me anything..." />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const sendBtn = document.getElementById("send-btn");
+    const userInput = document.getElementById("user-input");
+
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.classList.add("message", sender);
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      appendMessage("user", message);
+      userInput.value = "";
+
+      appendMessage("ai", "Thinking... 💭");
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        chatBox.lastChild.remove();
+        appendMessage("ai", data.reply);
+      } catch (error) {
+        chatBox.lastChild.remove();
+        appendMessage("ai", "⚠️ Error connecting to the server.");
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
